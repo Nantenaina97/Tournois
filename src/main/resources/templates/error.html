@@ -1,0 +1,5 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/error-page :: page(${status != null ? status : 'Erreur'}, ${error != null ? error : 'Erreur'}, 'Une erreur inattendue est survenue.')}"><body>
+</body>
+</html>

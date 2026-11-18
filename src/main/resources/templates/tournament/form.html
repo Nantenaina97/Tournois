@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Formulaire tournoi')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${tournamentForm.id == null} ? 'Créer un tournoi' : 'Modifier le tournoi'">Formulaire</h1>
+            <p class="page-subtitle">Les champs marqués d'un astérisque sont obligatoires.</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/tournaments}">Retour à la liste</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <form method="post" th:action="${tournamentForm.id == null} ? @{/tournaments} : @{/tournaments/{id}(id=${tournamentForm.id})}"
+          th:object="${tournamentForm}">
+        <div class="error-summary" th:if="${#fields.hasAnyErrors()}">
+            <strong>Le formulaire contient des erreurs :</strong>
+            <ul>
+                <li th:each="err : ${#fields.allErrors()}" th:text="${err}">erreur</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Informations générales</h2>
+            <div class="form-grid">
+                <div class="full">
+                    <label for="name">Nom du tournoi *</label>
+                    <input type="text" id="name" th:field="*{name}" placeholder="Ex. Coupe de Ligue 2026">
+                    <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                </div>
+                <div>
+                    <label for="sport">Sport *</label>
+                    <select id="sport" th:field="*{sport}">
+                        <option th:each="s : ${sports}" th:value="${s}" th:text="${s.libelle}">—</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="type">Format de compétition *</label>
+                    <select id="type" th:field="*{type}">
+                        <option th:each="t : ${types}" th:value="${t}" th:text="${t.libelle}">—</option>
+                    </select>
+                    <span class="help-text">
+                        Championnat simple : chaque équipe rencontre les autres une fois.<br>
+                        Aller-retour : deux rencontres par paire.<br>
+                        Élimination directe : tableau à élimination.
+                    </span>
+                </div>
+                <div>
+                    <label for="startDate">Date de début *</label>
+                    <input type="date" id="startDate" th:field="*{startDate}">
+                    <span class="field-error" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></span>
+                </div>
+                <div>
+                    <label for="endDate">Date de fin</label>
+                    <input type="date" id="endDate" th:field="*{endDate}">
+                    <span class="help-text">Calculée automatiquement à la génération du calendrier si vide.</span>
+                </div>
+                <div>
+                    <label for="venue">Lieu</label>
+                    <input type="text" id="venue" th:field="*{venue}" placeholder="Stade…">
+                </div>
+                <div>
+                    <label for="maxTeams">Nombre maximum d'équipes *</label>
+                    <input type="number" id="maxTeams" th:field="*{maxTeams}" min="2" max="256">
+                    <span class="field-error" th:if="${#fields.hasErrors('maxTeams')}" th:errors="*{maxTeams}"></span>
+                </div>
+                <div class="full">
+                    <label for="description">Description</label>
+                    <textarea id="description" th:field="*{description}"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Réglages de la compétition</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="status">Statut</label>
+                    <select id="status" th:field="*{status}" th:disabled="${tournamentForm.id != null}">
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.libelle}">—</option>
+                    </select>
+                    <span class="help-text" th:if="${tournamentForm.id != null}">
+                        Le statut se change via le formulaire de transition dédié.
+                    </span>
+                </div>
+                <div>
+                    <label for="kickoffTime">Heure de coup d'envoi</label>
+                    <input type="time" id="kickoffTime" th:field="*{kickoffTime}">
+                </div>
+                <div>
+                    <label for="pointsForWin">Points par victoire</label>
+                    <input type="number" id="pointsForWin" th:field="*{pointsForWin}" min="0" max="10">
+                </div>
+                <div>
+                    <label for="pointsForDraw">Points par nul</label>
+                    <input type="number" id="pointsForDraw" th:field="*{pointsForDraw}" min="0" max="10">
+                </div>
+                <div>
+                    <label for="daysBetweenRounds">Jours entre deux tours</label>
+                    <input type="number" id="daysBetweenRounds" th:field="*{daysBetweenRounds}" min="1">
+                </div>
+                <div>
+                    <label for="matchDurationMinutes">Durée d'un match (min)</label>
+                    <input type="number" id="matchDurationMinutes" th:field="*{matchDurationMinutes}" min="0">
+                </div>
+                <div class="full">
+                    <label>Critères de classement (par ordre de priorité)</label>
+                    <div class="checkbox-row" style="flex-wrap:wrap; gap:14px;">
+                        <label th:each="c : ${criteria}" class="checkbox-row" style="font-weight:500;">
+                            <input type="checkbox" th:field="*{rankingCriteria}" th:value="${c}">
+                            <span th:text="${c.libelle}">Critère</span>
+                        </label>
+                    </div>
+                    <span class="help-text">Les critères sont pris en compte dans l'ordre de la liste.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn" th:text="${tournamentForm.id == null} ? 'Créer le tournoi' : 'Enregistrer'">Enregistrer</button>
+            <a class="btn btn-outline" th:href="@{/tournaments}">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

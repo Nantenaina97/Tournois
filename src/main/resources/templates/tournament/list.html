@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tournois')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Gestion des tournois</h1>
+            <p class="page-subtitle">Recherche, filtres, tri et pagination.</p>
+        </div>
+        <a class="btn" th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}"
+           th:href="@{/tournaments/new}">+ Nouveau tournoi</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="card">
+        <form method="get" th:action="@{/tournaments}" class="filters">
+            <div class="field">
+                <label for="search">Recherche</label>
+                <input type="text" id="search" name="search" th:value="${search}" placeholder="Nom, lieu, description…">
+            </div>
+            <div class="field">
+                <label for="status">Statut</label>
+                <select id="status" name="status">
+                    <option value="">Tous</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.libelle}"
+                            th:selected="${s == statusFilter}">—</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="type">Format</label>
+                <select id="type" name="type">
+                    <option value="">Tous</option>
+                    <option th:each="t : ${types}" th:value="${t}" th:text="${t.libelle}"
+                            th:selected="${t == typeFilter}">—</option>
+                </select>
+            </div>
+            <input type="hidden" name="sort" th:value="${sort}">
+            <div class="btn-row">
+                <button type="submit" class="btn">Filtrer</button>
+                <a class="btn btn-outline" th:href="@{/tournaments}">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th><a th:href="@{/tournaments(sort='name,asc',search=${search},status=${statusFilter},type=${typeFilter})}">Nom</a></th>
+                    <th>Sport</th>
+                    <th><a th:href="@{/tournaments(sort='startDate,desc',search=${search},status=${statusFilter},type=${typeFilter})}">Dates</a></th>
+                    <th>Lieu</th>
+                    <th>Format</th>
+                    <th>Statut</th>
+                    <th class="num">Équipes</th>
+                    <th class="num">Matchs</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="t : ${tournaments}">
+                    <td><a th:href="@{/tournaments/{id}(id=${t.id})}" th:text="${t.name}">Tournoi</a></td>
+                    <td th:text="${t.sportLabel}">—</td>
+                    <td>
+                        <span th:text="${t.startDate != null ? #temporals.format(t.startDate, 'dd/MM/yyyy') : '—'}">—</span>
+                        <span class="text-muted" th:if="${t.endDate != null}">
+                            → <span th:text="${#temporals.format(t.endDate, 'dd/MM/yyyy')}">—</span></span>
+                    </td>
+                    <td th:text="${t.venue}">—</td>
+                    <td th:text="${t.typeLabel}">—</td>
+                    <td><span class="badge" th:classappend="${'badge-' + t.status}" th:text="${t.statusLabel}">—</span></td>
+                    <td class="num">
+                        <a th:href="@{/tournaments/{id}/teams(id=${t.id})}" th:text="${t.registeredTeams} + ' / ' + ${t.maxTeams}">0</a>
+                    </td>
+                    <td class="num">
+                        <a th:href="@{/tournaments/{id}/matches(id=${t.id})}"
+                           th:text="${t.finishedMatches} + ' / ' + ${t.generatedMatches}">0</a>
+                    </td>
+                    <td>
+                        <div class="btn-row">
+                            <a class="btn btn-sm btn-outline" th:href="@{/tournaments/{id}(id=${t.id})}">Ouvrir</a>
+                            <a class="btn btn-sm btn-outline" th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}"
+                               th:href="@{/tournaments/{id}/edit(id=${t.id})}">Modifier</a>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(tournaments)}">
+                    <td colspan="9" class="empty">Aucun tournoi ne correspond aux critères.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" th:if="${page.totalPages > 1}">
+            <span th:if="${page.first}" class="text-muted">«</span>
+            <a th:if="${!page.first}" th:href="@{/tournaments(page=${page.number - 1},size=${page.size},sort=${sort},search=${search},status=${statusFilter},type=${typeFilter})}">«</a>
+            <span class="current" th:text="${page.number + 1}">1</span>
+            <a th:if="${!page.last}" th:href="@{/tournaments(page=${page.number + 1},size=${page.size},sort=${sort},search=${search},status=${statusFilter},type=${typeFilter})}">»</a>
+            <span class="text-muted" th:text="'Page ' + ${page.number + 1} + ' / ' + ${page.totalPages} + ' — ' + ${page.totalElements} + ' tournoi(x)'">Page 1/1</span>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

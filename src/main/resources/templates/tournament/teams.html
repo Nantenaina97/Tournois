@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Équipes du tournoi')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="t=${tournament}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="'Équipes — ' + ${t.name}">Équipes</h1>
+            <p class="page-subtitle" th:text="${#lists.size(registrations)} + ' équipe(s) inscrite(s), ' + ${slotsLeft} + ' place(s) restante(s)'">—</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/tournaments/{id}(id=${t.id})}">Retour au tournoi</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="grid grid-sidebar">
+        <div class="card">
+            <h2 class="card-title">Liste des équipes</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th class="num">Tête de série</th>
+                        <th>Équipe</th>
+                        <th>Ville</th>
+                        <th>Entraîneur</th>
+                        <th>Statut d'inscription</th>
+                        <th th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${registrations}">
+                        <td class="num" th:text="${r.seedNumber}">1</td>
+                        <td>
+                            <img class="team-logo" th:if="${r.team.logoUrl}" th:src="${r.team.logoUrl}" alt="">
+                            <a th:href="@{/teams/{id}(id=${r.team.id})}" th:text="${r.team.name}">Équipe</a>
+                        </td>
+                        <td th:text="${r.team.city}">—</td>
+                        <td th:text="${r.team.coach}">—</td>
+                        <td><span class="badge" th:text="${r.status.libelle}">—</span></td>
+                        <td th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}">
+                            <form method="post" th:action="@{/tournaments/{tid}/teams/{teamId}/remove(tid=${t.id},teamId=${r.team.id})}"
+                                  th:if="${r.status.name() == 'INSCRITE'}">
+                                <button type="submit" class="btn btn-sm btn-danger">Retirer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(registrations)}">
+                        <td colspan="6" class="empty">Aucune équipe inscrite pour le moment.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div>
+            <div class="card" th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}">
+                <h2 class="card-title">Inscrire une équipe</h2>
+                <div class="alert alert-info" th:if="${!t.status.registrationOpen}">
+                    Les inscriptions sont fermées (statut : <span th:text="${t.status.libelle}">—</span>).
+                </div>
+                <form method="post" th:action="@{/tournaments/{id}/teams(id=${t.id})}" th:object="${registrationForm}">
+                    <div style="margin-bottom:12px;">
+                        <label for="teamId">Équipe *</label>
+                        <select id="teamId" th:field="*{teamId}">
+                            <option value="">— Sélectionner —</option>
+                            <option th:each="team : ${availableTeams}" th:value="${team.id}" th:text="${team.name}">—</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label for="seedNumber">Tête de série</label>
+                        <input type="number" id="seedNumber" th:field="*{seedNumber}" min="1"
+                               placeholder="Attribuée automatiquement">
+                    </div>
+                    <button type="submit" class="btn">Inscrire</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Règles appliquées</h2>
+                <ul style="margin:0; padding-left:18px; color:var(--muted); font-size:13.5px;">
+                    <li>Une équipe ne peut être inscrite qu'une seule fois par tournoi.</li>
+                    <li>Le nombre d'équipes ne peut dépasser la capacité maximale.</li>
+                    <li>Aucune inscription après le début de la compétition.</li>
+                    <li>Une équipe ayant déjà joué ne peut plus être retirée.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

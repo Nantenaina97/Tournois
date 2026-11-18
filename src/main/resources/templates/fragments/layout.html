@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle} + ' — Gestion des Tournois'">Gestion des Tournois</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127942;</text></svg>">
+</head>
+<body>
+
+<nav th:fragment="navbar" class="navbar">
+    <div class="container nav-inner">
+        <a class="brand" th:href="@{/dashboard}">
+            <span class="brand-icon">&#127942;</span>
+            <span>Gestion des <strong>Tournois</strong></span>
+        </a>
+        <div class="nav-links">
+            <a th:href="@{/dashboard}" class="nav-link">Tableau de bord</a>
+            <a th:href="@{/tournaments}" class="nav-link">Tournois</a>
+            <a th:href="@{/teams}" class="nav-link">Équipes</a>
+        </div>
+        <div class="nav-user" th:if="${#authorization.expression('isAuthenticated()')}">
+            <span class="badge" th:classappend="${#authorization.expression('hasRole(''ADMIN'')')} ? 'badge-admin'"
+                  th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? 'ADMIN'
+                         : (${#authorization.expression('hasRole(''MANAGER'')')} ? 'MANAGER'
+                         : (${#authorization.expression('hasRole(''OPERATOR'')')} ? 'OPERATOR' : 'USER'))">USER</span>
+            <span th:text="${#authentication.name}">user</span>
+            <form th:action="@{/logout}" method="post" class="inline-form">
+                <button type="submit" class="btn btn-sm btn-ghost">Déconnexion</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div th:fragment="flash" class="flash-container">
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+    <div class="alert alert-warning" th:if="${message}" th:text="${message}"></div>
+</div>
+
+<footer th:fragment="footer" class="footer">
+    <div class="container">
+        <span>Projet Java / Spring Boot — Système de gestion de tournois sportifs</span>
+        <span th:text="'© ' + ${#temporals.year(#temporals.createToday())}">© 2026</span>
+    </div>
+</footer>
+
+</body>
+</html>

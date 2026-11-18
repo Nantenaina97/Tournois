@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tableau final')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="t=${tournament}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="'Tableau final — ' + ${t.name}">Élimination directe</h1>
+            <p class="page-subtitle" th:text="${bracket.numberOfTeams} + ' équipes · tableau de ' + ${bracket.bracketSize}
+                    + ' · ' + ${bracket.preliminaryMatches} + ' match(s) préliminaire(s) · ' + ${bracket.byes} + ' exempt(s)'">—</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/tournaments/{id}(id=${t.id})}">Retour au tournoi</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="alert alert-info" th:if="${bracket.preliminaryMatches > 0}">
+        Le nombre d'équipes n'est pas une puissance de deux : un tour préliminaire a été ajouté
+        (<span th:text="${bracket.preliminaryMatches}">0</span> matchs) et
+        <span th:text="${bracket.byes}">0</span> équipes bénéficient d'un exempt.
+    </div>
+
+    <div class="card">
+        <div class="bracket">
+            <div class="bracket-round" th:each="round : ${bracket.rounds}">
+                <div class="bracket-round-title" th:text="${round.label}">Tour</div>
+                <div class="bracket-match" th:each="m : ${round.matches}">
+                    <div class="bracket-team"
+                         th:classappend="${m.winnerTeamId != null and m.winnerTeamId == m.homeTeamId ? 'winner' : (m.homeScore != null ? 'loser' : '')}">
+                        <span th:if="${m.homeTeamName != null}" th:text="${m.homeTeamName}">dom</span>
+                        <span th:unless="${m.homeTeamName != null}" class="tbd" th:text="${m.homeLabel}">?</span>
+                        <strong th:text="${m.homeScore}">0</strong>
+                    </div>
+                    <div class="bracket-team"
+                         th:classappend="${m.winnerTeamId != null and m.winnerTeamId == m.awayTeamId ? 'winner' : (m.awayScore != null ? 'loser' : '')}">
+                        <span th:if="${m.awayTeamName != null}" th:text="${m.awayTeamName}">ext</span>
+                        <span th:unless="${m.awayTeamName != null}" class="tbd" th:text="${m.awayLabel}">?</span>
+                        <strong th:text="${m.awayScore}">0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="champion-box" th:if="${bracket.championTeamName != null}">
+            &#127942; Champion : <span th:text="${bracket.championTeamName}">Champion</span>
+        </div>
+        <p class="text-muted" th:if="${bracket.championTeamName == null}">
+            Le champion sera désigné à l'issue de la finale.
+        </p>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Toutes les rencontres du tableau</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Phase</th>
+                    <th>Date</th>
+                    <th>Rencontre</th>
+                    <th class="num">Score</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="round : ${bracket.rounds}">
+                    <td th:each="m : ${round.matches}" style="border:none; padding:0;">
+                        <div class="table-wrapper">
+                            <table>
+                                <tbody>
+                                <tr>
+                                    <td th:text="${round.label}">Phase</td>
+                                    <td th:text="${m.matchDate != null ? #temporals.format(m.matchDate, 'dd/MM/yyyy') : '—'}">—</td>
+                                    <td th:text="${m.homeTeamName != null ? m.homeTeamName : m.homeLabel}">dom</td>
+                                    <td th:text="${' vs ' + (m.awayTeamName != null ? m.awayTeamName : m.awayLabel)}">vs</td>
+                                    <td class="num" th:text="${m.homeScore != null ? m.homeScore + ' - ' + m.awayScore : '—'}">—</td>
+                                    <td><span class="badge" th:classappend="${'badge-' + m.status}" th:text="${m.statusLabel}">—</span></td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline" th:if="${m.homeTeamId != null and m.awayTeamId != null}"
+                                           th:href="@{/matches/{id}/result(id=${m.id})}">Saisir</a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(bracket.rounds)}">
+                    <td colspan="6" class="empty">Le tableau n'a pas encore été généré.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

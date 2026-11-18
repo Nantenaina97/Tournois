@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Utilisateurs')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Utilisateurs</h1>
+            <p class="page-subtitle">Gestion des comptes et des rôles (réservée aux administrateurs).</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/dashboard}">Retour au tableau de bord</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="grid grid-sidebar">
+        <div class="card">
+            <h2 class="card-title">Comptes existants (<span th:text="${#lists.size(users)}">0</span>)</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th class="num">#</th>
+                        <th>Identifiant</th>
+                        <th>Nom complet</th>
+                        <th>E-mail</th>
+                        <th>Rôle</th>
+                        <th>État</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="u : ${users}">
+                        <td class="num" th:text="${u.id}">1</td>
+                        <td class="mono" th:text="${u.username}">user</td>
+                        <td th:text="${u.fullName}">—</td>
+                        <td th:text="${u.email}">—</td>
+                        <td>
+                            <form method="post" th:action="@{/admin/users/{id}/role(id=${u.id})}" class="btn-row">
+                                <select name="role" style="padding:5px 8px; font-size:13px;">
+                                    <option th:each="r : ${roles}" th:value="${r}" th:text="${r.libelle}"
+                                            th:selected="${r == u.role}">—</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm">OK</button>
+                            </form>
+                        </td>
+                        <td>
+                            <span class="badge" th:classappend="${u.enabled ? 'badge-ACTIF' : 'badge-INACTIF'}"
+                                  th:text="${u.enabled ? 'Actif' : 'Désactivé'}">—</span>
+                        </td>
+                        <td>
+                            <form method="post" th:action="@{/admin/users/{id}/delete(id=${u.id})}"
+                                  onsubmit="return confirm('Supprimer cet utilisateur ?');"
+                                  th:if="${u.username != #authentication.name}">
+                                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                            </form>
+                            <span class="text-muted" th:if="${u.username == #authentication.name}">—</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Créer un compte</h2>
+            <form method="post" th:action="@{/admin/users}">
+                <div style="margin-bottom:12px;">
+                    <label for="username">Identifiant *</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="password">Mot de passe *</label>
+                    <input type="password" id="password" name="password" required minlength="6">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="fullName">Nom complet</label>
+                    <input type="text" id="fullName" name="fullName">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label for="role">Rôle *</label>
+                    <select id="role" name="role" required>
+                        <option th:each="r : ${roles}" th:value="${r}" th:text="${r.libelle}">—</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Créer</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Formulaire équipe')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <span th:if="${teamForm.id == null}">Créer une équipe</span>
+                <span th:unless="${teamForm.id != null}">Modifier l&#39;équipe</span>
+            </h1>
+            <p class="page-subtitle">Les champs marqués d'un astérisque sont obligatoires.</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/teams}">Retour à la liste</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <form method="post" th:action="${teamForm.id == null} ? @{/teams} : @{/teams/{id}(id=${teamForm.id})}"
+          th:object="${teamForm}">
+        <div class="error-summary" th:if="${#fields.hasAnyErrors()}">
+            <strong>Le formulaire contient des erreurs :</strong>
+            <ul>
+                <li th:each="err : ${#fields.allErrors()}" th:text="${err}">erreur</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Identité de l'équipe</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="name">Nom *</label>
+                    <input type="text" id="name" th:field="*{name}" placeholder="Ex. AS Monaco">
+                    <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                </div>
+                <div>
+                    <label for="logoUrl">Logo (URL)</label>
+                    <input type="url" id="logoUrl" th:field="*{logoUrl}" placeholder="https://…">
+                    <span class="field-error" th:if="${#fields.hasErrors('logoUrl')}" th:errors="*{logoUrl}"></span>
+                </div>
+                <div>
+                    <label for="city">Ville</label>
+                    <input type="text" id="city" th:field="*{city}">
+                </div>
+                <div>
+                    <label for="foundedYear">Année de fondation</label>
+                    <input type="number" id="foundedYear" th:field="*{foundedYear}" min="1800" max="2100">
+                    <span class="field-error" th:if="${#fields.hasErrors('foundedYear')}" th:errors="*{foundedYear}"></span>
+                </div>
+                <div>
+                    <label for="status">Statut</label>
+                    <select id="status" th:field="*{status}">
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.libelle}">—</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Staff</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="coach">Entraîneur</label>
+                    <input type="text" id="coach" th:field="*{coach}">
+                </div>
+                <div>
+                    <label for="coachPhone">Téléphone de l'entraîneur</label>
+                    <input type="tel" id="coachPhone" th:field="*{coachPhone}" placeholder="+33 6 12 34 56 78">
+                    <span class="field-error" th:if="${#fields.hasErrors('coachPhone')}" th:errors="*{coachPhone}"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">
+                <span th:if="${teamForm.id == null}">Créer l&#39;équipe</span>
+                <span th:unless="${teamForm.id != null}">Enregistrer</span>
+            </button>
+            <a class="btn btn-outline" th:href="@{/teams}">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

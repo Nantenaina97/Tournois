@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Classement')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="t=${tournament}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="'Classement — ' + ${t.name}">Classement</h1>
+            <p class="page-subtitle">
+                Calculé automatiquement à partir des résultats saisis.
+                Barème : <span th:text="${t.pointsForWin} + ' pts par victoire, ' + ${t.pointsForDraw} + ' pt par nul'">—</span>
+            </p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/tournaments/{id}(id=${t.id})}">Retour au tournoi</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="card">
+        <h2 class="card-title">Critères de tri appliqués (par ordre de priorité)</h2>
+        <span class="chip" th:each="c, it : ${criteria}">
+            <strong th:text="${it.count} + '.'">1.</strong> <span th:text="${c.libelle}">Critère</span>
+        </span>
+    </div>
+
+    <div class="card">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th class="num">#</th>
+                    <th>Équipe</th>
+                    <th class="num">Joués</th>
+                    <th class="num">Gagnés</th>
+                    <th class="num">Nuls</th>
+                    <th class="num">Perdus</th>
+                    <th class="num">Pour</th>
+                    <th class="num">Contre</th>
+                    <th class="num">Diff.</th>
+                    <th class="num">Points</th>
+                    <th>Forme</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${standings}">
+                    <td class="num">
+                        <span class="rank-medal" th:if="${s.rank <= 3}" th:text="${s.rank}">1</span>
+                        <span th:unless="${s.rank <= 3}" th:text="${s.rank}">4</span>
+                    </td>
+                    <td>
+                        <img class="team-logo" th:if="${s.team.logoUrl}" th:src="${s.team.logoUrl}" alt="">
+                        <a th:href="@{/teams/{id}(id=${s.team.id})}" th:text="${s.team.name}">Équipe</a>
+                    </td>
+                    <td class="num" th:text="${s.played}">0</td>
+                    <td class="num" th:text="${s.won}">0</td>
+                    <td class="num" th:text="${s.drawn}">0</td>
+                    <td class="num" th:text="${s.lost}">0</td>
+                    <td class="num" th:text="${s.goalsFor}">0</td>
+                    <td class="num" th:text="${s.goalsAgainst}">0</td>
+                    <td class="num" th:text="${s.goalDifference}">0</td>
+                    <td class="num"><strong th:text="${s.points}">0</strong></td>
+                    <td class="mono">
+                        <span th:each="c : ${s.formList}"
+                              th:text="${c == 'V' ? 'V' : (c == 'N' ? 'N' : 'D')}"
+                              th:classappend="${c == 'V' ? 'badge badge-won' : (c == 'N' ? 'badge badge-drawn' : 'badge badge-lost')}"
+                              style="margin-right:3px;">V</span>
+                        <span class="text-muted" th:if="${#lists.isEmpty(s.formList)}">—</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(standings)}">
+                    <td colspan="11" class="empty">Aucun résultat enregistré pour le moment.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

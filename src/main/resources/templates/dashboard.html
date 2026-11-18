@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tableau de bord')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Tableau de bord</h1>
+            <p class="page-subtitle">Vue d'ensemble des compétitions, des équipes et des rencontres.</p>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="grid grid-4" style="margin-bottom:22px;">
+        <div class="stat">
+            <div class="stat-value" th:text="${dashboard.totalTournaments}">0</div>
+            <div class="stat-label">Tournois</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${dashboard.activeTournaments}">0</div>
+            <div class="stat-label">En cours</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${dashboard.finishedTournaments}">0</div>
+            <div class="stat-label">Terminés</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${dashboard.totalTeams}">0</div>
+            <div class="stat-label">Équipes</div>
+        </div>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:22px;">
+        <div class="stat">
+            <div class="stat-value" th:text="${dashboard.totalMatches}">0</div>
+            <div class="stat-label">Rencontres</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${dashboard.finishedMatches}">0</div>
+            <div class="stat-label">Résultats saisis</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${dashboard.matchesToday}">0</div>
+            <div class="stat-label">Matchs aujourd'hui</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${dashboard.totalGoals}">0</div>
+            <div class="stat-label">Buts / points marqués</div>
+        </div>
+    </div>
+
+    <div class="grid grid-sidebar">
+        <div>
+            <div class="card">
+                <h2 class="card-title">Prochaines rencontres</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th>Rencontre</th>
+                            <th>Tournoi</th>
+                            <th>Terrain</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="m : ${upcoming}">
+                            <td th:text="${#temporals.format(m.matchDate, 'dd/MM/yyyy')}">—</td>
+                            <td th:text="${m.matchTime}">—</td>
+                            <td>
+                                <span th:text="${m.homeTeam != null ? m.homeTeam.name : m.homeLabel}">dom</span>
+                                <strong> vs </strong>
+                                <span th:text="${m.awayTeam != null ? m.awayTeam.name : m.awayLabel}">ext</span>
+                            </td>
+                            <td><a th:href="@{/tournaments/{id}(id=${m.tournament.id})}" th:text="${m.tournament.name}">T</a></td>
+                            <td th:text="${m.field}">—</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(upcoming)}">
+                            <td colspan="5" class="empty">Aucune rencontre à venir.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Compétitions récentes</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Tournoi</th>
+                            <th>Sport</th>
+                            <th>Format</th>
+                            <th>Statut</th>
+                            <th class="num">Équipes</th>
+                            <th class="num">Matchs</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="t : ${dashboard.recentTournaments}">
+                            <td><a th:href="@{/tournaments/{id}(id=${t.id})}" th:text="${t.name}">T</a></td>
+                            <td th:text="${t.sportLabel}">—</td>
+                            <td th:text="${t.typeLabel}">—</td>
+                            <td><span class="badge" th:classappend="${'badge-' + t.status}" th:text="${t.statusLabel}">—</span></td>
+                            <td class="num" th:text="${t.registeredTeams}">0</td>
+                            <td class="num" th:text="${t.generatedMatches}">0</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(dashboard.recentTournaments)}">
+                            <td colspan="6" class="empty">Aucun tournoi. Commencez par en créer un.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h2 class="card-title">Répartition par statut</h2>
+                <table>
+                    <tbody>
+                    <tr th:each="entry : ${dashboard.tournamentsByStatus}">
+                        <td>
+                            <span class="badge" th:classappend="${'badge-' + entry.key}"
+                                  th:text="${#strings.toUpperCase(entry.key)}">S</span>
+                        </td>
+                        <td class="num"><strong th:text="${entry.value}">0</strong></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Équipes par ville</h2>
+                <table>
+                    <tbody>
+                    <tr th:each="entry : ${dashboard.teamsByCity}">
+                        <td th:text="${entry.key}">Ville</td>
+                        <td class="num"><strong th:text="${entry.value}">0</strong></td>
+                    </tr>
+                    <tr th:if="${#maps.isEmpty(dashboard.teamsByCity)}">
+                        <td class="empty">Aucune donnée</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card" th:if="${!#lists.isEmpty(dashboard.liveTournaments)}">
+                <h2 class="card-title">Compétitions actives</h2>
+                <ul style="padding-left:18px; margin:0;">
+                    <li th:each="t : ${dashboard.liveTournaments}">
+                        <a th:href="@{/tournaments/{id}(id=${t.id})}" th:text="${t.name}">T</a>
+                        <span class="badge" th:classappend="${'badge-' + t.status}" th:text="${t.statusLabel}">—</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Raccourcis</h2>
+                <div class="btn-row">
+                    <a class="btn btn-sm btn-outline" th:href="@{/tournaments}">Tournois</a>
+                    <a class="btn btn-sm btn-outline" th:href="@{/teams}">Équipes</a>
+                    <a class="btn btn-sm btn-outline" th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                       th:href="@{/admin/users}">Utilisateurs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

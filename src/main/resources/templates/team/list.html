@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Équipes')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Équipes</h1>
+            <p class="page-subtitle" th:text="${page.totalElements} + ' équipe(s) enregistrée(s)'">Équipes</p>
+        </div>
+        <a class="btn" th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}" th:href="@{/teams/new}">Nouvelle équipe</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="card">
+        <form method="get" th:action="@{/teams}" class="filters">
+            <div class="field">
+                <label for="search">Recherche</label>
+                <input type="text" id="search" name="search" th:value="${search}" placeholder="Nom, ville, entraîneur…">
+            </div>
+            <div class="field">
+                <label for="status">Statut</label>
+                <select id="status" name="status">
+                    <option value="">Tous</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.libelle}"
+                            th:selected="${s == statusFilter}">—</option>
+                </select>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn">Filtrer</button>
+                <a class="btn btn-outline" th:href="@{/teams}">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Équipe</th>
+                    <th>Ville</th>
+                    <th>Entraîneur</th>
+                    <th>Téléphone</th>
+                    <th class="num">Fondée en</th>
+                    <th class="num">Effectif</th>
+                    <th>Statut</th>
+                    <th th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="team : ${teams}">
+                    <td>
+                        <img class="team-logo" th:if="${team.logoUrl}" th:src="${team.logoUrl}" alt="">
+                        <a th:href="@{/teams/{id}(id=${team.id})}" th:text="${team.name}">Équipe</a>
+                    </td>
+                    <td th:text="${team.city}">—</td>
+                    <td th:text="${team.coach}">—</td>
+                    <td th:text="${team.coachPhone}">—</td>
+                    <td class="num" th:text="${team.foundedYear}">—</td>
+                    <td class="num" th:text="${#lists.size(team.players)}">0</td>
+                    <td><span class="badge" th:classappend="${'badge-' + team.status}" th:text="${team.status.libelle}">—</span></td>
+                    <td th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}">
+                        <a class="btn btn-sm btn-outline" th:href="@{/teams/{id}/edit(id=${team.id})}">Modifier</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(teams)}">
+                    <td colspan="8" class="empty">Aucune équipe ne correspond aux critères.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" th:if="${page.totalPages > 1}">
+            <a th:if="${!page.first}" th:href="@{/teams(page=${page.number - 1},search=${search},status=${statusFilter})}">« Précédent</a>
+            <span class="current" th:text="${page.number + 1}">1</span>
+            <a th:if="${!page.last}" th:href="@{/teams(page=${page.number + 1},search=${search},status=${statusFilter})}">Suivant »</a>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

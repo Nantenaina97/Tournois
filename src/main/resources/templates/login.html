@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Connexion')}"></head>
+<body class="login-page">
+<div class="login-card">
+    <h1>&#127942; Gestion des Tournois</h1>
+    <p class="subtitle">Connectez-vous pour accéder à la plateforme.</p>
+
+    <div class="alert alert-error" th:if="${param.error}">Identifiant ou mot de passe incorrect.</div>
+    <div class="alert alert-success" th:if="${param.logout}">Vous avez été déconnecté.</div>
+
+    <form th:action="@{/login}" method="post">
+        <div style="margin-bottom:14px;">
+            <label for="username">Identifiant</label>
+            <input type="text" id="username" name="username" autocomplete="username" required autofocus>
+        </div>
+        <div style="margin-bottom:20px;">
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn" style="width:100%;">Se connecter</button>
+    </form>
+
+    <div class="demo-users">
+        <strong>Comptes de démonstration</strong>
+        <ul style="margin:8px 0 0 18px; padding:0;">
+            <li><code>admin</code> / <code>admin123</code> — Administrateur</li>
+            <li><code>manager</code> / <code>manager123</code> — Manager</li>
+            <li><code>operateur</code> / <code>operateur123</code> — Opérateur</li>
+            <li><code>user</code> / <code>user123</code> — Utilisateur (consultation)</li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>

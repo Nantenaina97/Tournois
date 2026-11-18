@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Statistiques du tournoi')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="t=${tournament}, s=${stats}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="'Statistiques — ' + ${t.name}">Statistiques</h1>
+            <p class="page-subtitle" th:text="'Avancement : ' + ${s.completionRate} + ' %'">—</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/tournaments/{id}(id=${t.id})}">Retour au tournoi</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="grid grid-4" style="margin-bottom:20px;">
+        <div class="stat">
+            <div class="stat-value" th:text="${s.totalTeams}">0</div>
+            <div class="stat-label">Équipes</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${s.finishedMatches} + ' / ' + ${s.totalMatches}">0</div>
+            <div class="stat-label">Matchs joués</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${s.totalGoals}">0</div>
+            <div class="stat-label">Buts / points</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" th:text="${s.averageGoalsPerMatch}">0</div>
+            <div class="stat-label">Moyenne par match</div>
+        </div>
+    </div>
+
+    <div class="grid grid-sidebar">
+        <div>
+            <div class="card">
+                <h2 class="card-title">Répartition des rencontres</h2>
+                <table>
+                    <tbody>
+                    <tr th:each="entry : ${s.matchesByStatus}">
+                        <th th:text="${entry.key}">Statut</th>
+                        <td style="width:60%;">
+                            <div class="bar">
+                                <span th:style="'width:' + ${s.totalMatches > 0 ? (entry.value * 100 / s.totalMatches) : 0} + '%'"></span>
+                            </div>
+                        </td>
+                        <td class="num" th:text="${entry.value}">0</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card" th:if="${!#lists.isEmpty(s.recentMatches)}">
+                <h2 class="card-title">Derniers résultats</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr><th>Date</th><th>Rencontre</th><th class="num">Score</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="m : ${s.recentMatches}">
+                            <td th:text="${m.matchDate != null ? #temporals.format(m.matchDate, 'dd/MM/yyyy') : '—'}">—</td>
+                            <td th:text="${m.homeTeamName} + ' vs ' + ${m.awayTeamName}">—</td>
+                            <td class="num" th:text="${m.homeScore} + ' - ' + ${m.awayScore}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card" th:if="${s.longestWinningStreakTeamName != null}">
+                <h2 class="card-title">Meilleure attaque</h2>
+                <p style="margin:0;">
+                    <strong th:text="${s.longestWinningStreakTeamName}">Équipe</strong><br>
+                    <span class="text-muted" th:text="${s.longestWinningStreak} + ' victoire(s)'">0</span>
+                </p>
+            </div>
+
+            <div class="card" th:if="${!#lists.isEmpty(s.topTeams)}">
+                <h2 class="card-title">Top 5</h2>
+                <table>
+                    <tbody>
+                    <tr th:each="st : ${s.topTeams}">
+                        <td class="num" th:text="${st.rank}">1</td>
+                        <td th:text="${st.teamName}">Équipe</td>
+                        <td class="num"><strong th:text="${st.points}">0</strong> pts</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

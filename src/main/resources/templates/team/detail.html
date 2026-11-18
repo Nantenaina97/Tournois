@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Détail équipe')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="t=${team}">
+    <div class="page-header">
+        <div class="checkbox-row" style="gap:14px;">
+            <img th:if="${t.logoUrl}" th:src="${t.logoUrl}" alt="" class="team-logo"
+                 style="width:52px; height:52px;">
+            <div>
+                <h1 class="page-title" th:text="${t.name}">Équipe</h1>
+                <p class="page-subtitle">
+                    <span th:text="${t.city}">Ville</span> ·
+                    <span class="badge" th:classappend="${'badge-' + t.status}" th:text="${t.status.libelle}">Statut</span>
+                    <span th:if="${t.foundedYear != null}" th:text="' · fondée en ' + ${t.foundedYear}">—</span>
+                </p>
+            </div>
+        </div>
+        <div class="btn-row">
+            <a class="btn btn-outline" th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}"
+               th:href="@{/teams/{id}/edit(id=${t.id})}">Modifier</a>
+            <a class="btn btn-outline" th:href="@{/teams}">Retour à la liste</a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="grid grid-sidebar">
+        <div>
+            <div class="card">
+                <h2 class="card-title">Effectif (<span th:text="${#lists.size(players)}">0</span>)</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th class="num">N°</th>
+                            <th>Joueur</th>
+                            <th>Poste</th>
+                            <th>Naissance</th>
+                            <th>Nationalité</th>
+                            <th th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="p : ${players}">
+                            <td class="num" th:text="${p.jerseyNumber}">—</td>
+                            <td th:text="${p.firstName} + ' ' + ${p.lastName}">Joueur</td>
+                            <td th:text="${p.position}">—</td>
+                            <td th:text="${p.birthDate != null ? #temporals.format(p.birthDate, 'dd/MM/yyyy') : '—'}">—</td>
+                            <td th:text="${p.nationality}">—</td>
+                            <td th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}">
+                                <form method="post" th:action="@{/teams/{tid}/players/{pid}/delete(tid=${t.id},pid=${p.id})}"
+                                      onsubmit="return confirm('Retirer ce joueur de l'effectif ?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Retirer</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(players)}">
+                            <td colspan="6" class="empty">Aucun joueur enregistré.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Historique des compétitions</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Tournoi</th>
+                            <th>Sport</th>
+                            <th>Statut</th>
+                            <th class="num">J</th>
+                            <th class="num">V</th>
+                            <th class="num">N</th>
+                            <th class="num">D</th>
+                            <th class="num">Pts</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="h : ${history}">
+                            <td><a th:href="@{/tournaments/{id}(id=${h.tournamentId})}" th:text="${h.tournamentName}">T</a></td>
+                            <td th:text="${h.sport}">—</td>
+                            <td th:text="${h.tournamentStatus}">—</td>
+                            <td class="num" th:text="${h.matchesPlayed}">0</td>
+                            <td class="num" th:text="${h.wins}">0</td>
+                            <td class="num" th:text="${h.draws}">0</td>
+                            <td class="num" th:text="${h.losses}">0</td>
+                            <td class="num"><strong th:text="${h.points}">0</strong></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(history)}">
+                            <td colspan="8" class="empty">L'équipe n'a encore participé à aucun tournoi.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h2 class="card-title">Staff</h2>
+                <table>
+                    <tbody>
+                    <tr><th>Entraîneur</th><td th:text="${t.coach}">—</td></tr>
+                    <tr><th>Téléphone</th><td th:text="${t.coachPhone}">—</td></tr>
+                    <tr><th>Ville</th><td th:text="${t.city}">—</td></tr>
+                    <tr><th>Fondation</th><td th:text="${t.foundedYear}">—</td></tr>
+                    <tr><th>Statut</th><td th:text="${t.status.libelle}">—</td></tr>
+                    <tr><th>Effectif</th><td th:text="${#lists.size(players)} + ' joueur(s)'">—</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card" th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}">
+                <h2 class="card-title">Ajouter un joueur</h2>
+                <form method="post" th:action="@{/teams/{id}/players(id=${t.id})}" th:object="${playerRequest}">
+                    <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+                        <div>
+                            <label for="firstName">Prénom *</label>
+                            <input type="text" id="firstName" th:field="*{firstName}">
+                        </div>
+                        <div>
+                            <label for="lastName">Nom *</label>
+                            <input type="text" id="lastName" th:field="*{lastName}">
+                        </div>
+                        <div>
+                            <label for="position">Poste</label>
+                            <input type="text" id="position" th:field="*{position}" placeholder="Attaquant…">
+                        </div>
+                        <div>
+                            <label for="jerseyNumber">N° de maillot</label>
+                            <input type="number" id="jerseyNumber" th:field="*{jerseyNumber}" min="1" max="99">
+                        </div>
+                        <div>
+                            <label for="birthDate">Date de naissance</label>
+                            <input type="date" id="birthDate" th:field="*{birthDate}">
+                        </div>
+                        <div>
+                            <label for="nationality">Nationalité</label>
+                            <input type="text" id="nationality" th:field="*{nationality}" placeholder="FRA">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Ajouter</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card" th:if="${#authorization.expression('hasRole(''ADMIN'')') or #authorization.expression('hasRole(''MANAGER'')')}">
+                <h2 class="card-title">Zone dangereuse</h2>
+                <form method="post" th:action="@{/teams/{id}/delete(id=${t.id})}"
+                      onsubmit="return confirm('Supprimer définitivement cette équipe ?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Supprimer l'équipe</button>
+                </form>
+                <p class="help-text">La suppression est refusée si l'équipe est inscrite à un tournoi en cours.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

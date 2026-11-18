@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Saisie du résultat')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="m=${match}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Saisir le résultat</h1>
+            <p class="page-subtitle" th:text="${m.tournament.name} + ' · ' + ${m.phaseLabel != null ? m.phaseLabel : m.phase.libelle}">—</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/tournaments/{id}/matches(id=${m.tournament.id})}">Retour au calendrier</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="card">
+        <h2 class="card-title">Rencontre</h2>
+        <div class="grid grid-2">
+            <div class="stat">
+                <div class="stat-label">Équipe à domicile</div>
+                <div style="font-size:18px; font-weight:700;" th:text="${m.homeTeam != null ? m.homeTeam.name : m.homeLabel}">dom</div>
+            </div>
+            <div class="stat" style="border-left-color:var(--accent);">
+                <div class="stat-label">Équipe à l'extérieur</div>
+                <div style="font-size:18px; font-weight:700;" th:text="${m.awayTeam != null ? m.awayTeam.name : m.awayLabel}">ext</div>
+            </div>
+        </div>
+        <div class="alert alert-info" th:if="${!m.ready}">
+            Les deux équipes ne sont pas encore connues (tour suivant du tableau) : la saisie est impossible.
+        </div>
+    </div>
+
+    <form method="post" th:action="@{/matches/{id}/result(id=${m.id})}" th:object="${resultForm}">
+        <div class="card">
+            <h2 class="card-title">Score</h2>
+            <div class="error-summary" th:if="${#fields.hasAnyErrors()}">
+                <ul>
+                    <li th:each="err : ${#fields.allErrors()}" th:text="${err}">erreur</li>
+                </ul>
+            </div>
+            <div class="form-grid">
+                <div>
+                    <label for="homeScore" th:text="'Score ' + ${m.homeTeam != null ? m.homeTeam.name : m.homeLabel}">Score domicile</label>
+                    <input type="number" id="homeScore" th:field="*{homeScore}" min="0" required>
+                </div>
+                <div>
+                    <label for="awayScore" th:text="'Score ' + ${m.awayTeam != null ? m.awayTeam.name : m.awayLabel}">Score extérieur</label>
+                    <input type="number" id="awayScore" th:field="*{awayScore}" min="0" required>
+                </div>
+                <div class="full">
+                    <label for="winnerTeamId">Vainqueur (uniquement en cas d'égalité)</label>
+                    <select id="winnerTeamId" th:field="*{winnerTeamId}">
+                        <option value="">Déterminé par le score</option>
+                        <option th:if="${m.homeTeam != null}" th:value="${m.homeTeam.id}" th:text="${m.homeTeam.name}">dom</option>
+                        <option th:if="${m.awayTeam != null}" th:value="${m.awayTeam.id}" th:text="${m.awayTeam.name}">ext</option>
+                    </select>
+                    <span class="help-text">
+                        En élimination directe, un vainqueur obligatoire est demandé lorsque le score est nul
+                        (tirs au but, prolongation…).
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Informations de la rencontre</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="matchDate">Date</label>
+                    <input type="date" id="matchDate" th:field="*{matchDate}">
+                </div>
+                <div>
+                    <label for="matchTime">Heure</label>
+                    <input type="time" id="matchTime" th:field="*{matchTime}">
+                </div>
+                <div>
+                    <label for="field">Terrain</label>
+                    <input type="text" id="field" th:field="*{field}" placeholder="Terrain 1">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn" th:disabled="${!m.ready}">Enregistrer le résultat</button>
+            <a class="btn btn-outline" th:href="@{/tournaments/{id}/matches(id=${m.tournament.id})}">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Calendrier des matchs')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="t=${tournament}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="'Calendrier — ' + ${t.name}">Matchs</h1>
+            <p class="page-subtitle" th:text="${t.type.libelle} + ' · ' + ${#lists.size(matches)} + ' rencontre(s) sur cette page'">—</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/tournaments/{id}/generate(id=${t.id})}">Générer / régénérer</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="card">
+        <form method="get" th:action="@{/tournaments/{id}/matches(id=${t.id})}" class="filters">
+            <div class="field">
+                <label for="status">Statut</label>
+                <select id="status" name="status">
+                    <option value="">Tous</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.libelle}"
+                            th:selected="${s == statusFilter}">—</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="phase">Phase</label>
+                <select id="phase" name="phase">
+                    <option value="">Toutes</option>
+                    <option th:each="p : ${phases}" th:value="${p}" th:text="${p.libelle}"
+                            th:selected="${p == phaseFilter}">—</option>
+                </select>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn">Filtrer</button>
+                <a class="btn btn-outline" th:href="@{/tournaments/{id}/matches(id=${t.id})}">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Heure</th>
+                    <th>Tour / Phase</th>
+                    <th>Rencontre</th>
+                    <th class="num">Score</th>
+                    <th>Terrain</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${matches}"
+                    th:classappend="${m.status.name() == 'TERMINE' ? 'match-row-done' : 'match-row-pending'}">
+                    <td th:text="${m.matchDate != null ? #temporals.format(m.matchDate, 'dd/MM/yyyy') : '—'}">—</td>
+                    <td th:text="${m.matchTime}">—</td>
+                    <td>
+                        <span th:text="${m.phaseLabel}">—</span>
+                        <span class="text-muted" th:if="${m.phase.name() == 'CHAMPIONNAT'}"
+                              th:text="' (J' + ${m.roundNumber} + ')'">—</span>
+                    </td>
+                    <td>
+                        <span th:if="${m.homeTeam != null}" th:text="${m.homeTeam.name}">dom</span>
+                        <span th:if="${m.homeTeam == null}" class="text-muted" th:text="${m.homeLabel}">?</span>
+                        <strong> vs </strong>
+                        <span th:if="${m.awayTeam != null}" th:text="${m.awayTeam.name}">ext</span>
+                        <span th:if="${m.awayTeam == null}" class="text-muted" th:text="${m.awayLabel}">?</span>
+                        <span class="badge badge-won" th:if="${m.winner != null}" th:text="'Vainqueur'">V</span>
+                    </td>
+                    <td class="num">
+                        <span class="score" th:if="${m.hasScore()}"
+                              th:text="${m.homeScore} + ' - ' + ${m.awayScore}">0 - 0</span>
+                        <span class="text-muted" th:unless="${m.hasScore()}">—</span>
+                    </td>
+                    <td th:text="${m.field}">—</td>
+                    <td><span class="badge" th:classappend="${'badge-' + m.status}" th:text="${m.status.libelle}">—</span></td>
+                    <td>
+                        <a class="btn btn-sm btn-outline" th:if="${m.isReady() and m.homeTeam != null}"
+                           th:href="@{/matches/{id}/result(id=${m.id})}"
+                           th:text="${m.hasScore() ? 'Modifier' : 'Saisir'}">Saisir</a>
+                        <span class="text-muted" th:if="${!m.isReady()}">En attente</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(matches)}">
+                    <td colspan="8" class="empty">Aucune rencontre. Générez le calendrier pour démarrer.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" th:if="${page.totalPages > 1}">
+            <a th:if="${!page.first}"
+               th:href="@{/tournaments/{id}/matches(id=${t.id},page=${page.number - 1})}">« Précédent</a>
+            <span class="current" th:text="${page.number + 1}">1</span>
+            <a th:if="${!page.last}"
+               th:href="@{/tournaments/{id}/matches(id=${t.id},page=${page.number + 1})}">Suivant »</a>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

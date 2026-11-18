@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Détail du tournoi')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="t=${tournament}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${t.name}">Tournoi</h1>
+            <p class="page-subtitle">
+                <span th:text="${t.sport.libelle}">Sport</span> ·
+                <span th:text="${t.type.libelle}">Format</span> ·
+                <span th:text="${t.venue}">Lieu</span>
+            </p>
+        </div>
+        <div class="btn-row">
+            <span class="badge" style="font-size:14px; padding:6px 14px;"
+                  th:classappend="${'badge-' + t.status}" th:text="${t.status.libelle}">Statut</span>
+            <a class="btn btn-outline" th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')}"
+               th:href="@{/tournaments/{id}/edit(id=${t.id})}">Modifier</a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="tabs">
+        <a class="tab active" th:href="@{/tournaments/{id}(id=${t.id})}">Vue d'ensemble</a>
+        <a class="tab" th:href="@{/tournaments/{id}/teams(id=${t.id})}">Équipes (<span th:text="${#lists.size(registrations)}">0</span>)</a>
+        <a class="tab" th:href="@{/tournaments/{id}/matches(id=${t.id})}">Matchs</a>
+        <a class="tab" th:if="${t.type.knockout == false}" th:href="@{/tournaments/{id}/ranking(id=${t.id})}">Classement</a>
+        <a class="tab" th:if="${t.type.knockout}" th:href="@{/tournaments/{id}/bracket(id=${t.id})}">Tableau final</a>
+        <a class="tab" th:href="@{/tournaments/{id}/statistics(id=${t.id})}">Statistiques</a>
+        <a class="tab" th:href="@{/tournaments/{id}/generate(id=${t.id})}">Générer le calendrier</a>
+    </div>
+
+    <div class="grid grid-sidebar">
+        <div>
+            <div class="card">
+                <h2 class="card-title">Description</h2>
+                <p th:text="${t.description}">Aucune description.</p>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Équipes participantes</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th class="num">Tête</th>
+                            <th>Équipe</th>
+                            <th>Ville</th>
+                            <th>Statut</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${registrations}">
+                            <td class="num" th:text="${r.seedNumber}">1</td>
+                            <td>
+                                <img class="team-logo" th:if="${r.team.logoUrl}" th:src="${r.team.logoUrl}" alt="">
+                                <a th:href="@{/teams/{id}(id=${r.team.id})}" th:text="${r.team.name}">Équipe</a>
+                            </td>
+                            <td th:text="${r.team.city}">—</td>
+                            <td><span class="badge" th:text="${r.status.libelle}">—</span></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(registrations)}">
+                            <td colspan="4" class="empty">Aucune équipe inscrite.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h2 class="card-title">Paramètres</h2>
+                <table>
+                    <tbody>
+                    <tr><th>Début</th><td th:text="${t.startDate}">—</td></tr>
+                    <tr><th>Fin</th><td th:text="${t.endDate}">—</td></tr>
+                    <tr><th>Équipes</th><td th:text="${#lists.size(registrations)} + ' / ' + ${t.maxTeams}">—</td></tr>
+                    <tr><th>Matchs générés</th><td th:text="${matchCount}">0</td></tr>
+                    <tr><th>Résultats saisis</th><td th:text="${finishedCount}">0</td></tr>
+                    <tr><th>Barème</th><td th:text="${t.pointsForWin} + ' pts victoire / ' + ${t.pointsForDraw} + ' pt nul'">—</td></tr>
+                    <tr><th>Critères</th>
+                        <td><span class="chip" th:each="c : ${t.rankingCriteria}" th:text="${c.libelle}">c</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Changer le statut</h2>
+                <form method="post" th:action="@{/tournaments/{id}/status(id=${t.id})}" class="btn-row"
+                      th:if="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')') and !t.status.closed}">
+                    <select name="status" style="flex:1;">
+                        <option th:each="s : ${statuses}"
+                                th:value="${s}" th:text="${s.libelle}" th:disabled="${s == t.status}">—</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm">Appliquer</button>
+                </form>
+                <p class="text-muted" th:if="${t.status.closed}">
+                    Le tournoi est clôturé : il n'accepte plus de modification.
+                </p>
+            </div>
+
+            <div class="card" th:if="${#authorization.expression('hasRole(''MANAGER'')') or #authorization.expression('hasRole(''ADMIN'')')}">
+                <h2 class="card-title">Zone dangereuse</h2>
+                <form method="post" th:action="@{/tournaments/{id}/delete(id=${t.id})}"
+                      onsubmit="return confirm('Supprimer définitivement ce tournoi ?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Supprimer le tournoi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

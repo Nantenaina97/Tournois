@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Génération du calendrier')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container page" th:with="t=${tournament}">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Génération du calendrier</h1>
+            <p class="page-subtitle" th:text="${t.name} + ' · ' + ${t.type.libelle}">—</p>
+        </div>
+        <a class="btn btn-outline" th:href="@{/tournaments/{id}(id=${t.id})}">Retour au tournoi</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="grid grid-sidebar">
+        <div class="card">
+            <h2 class="card-title">Paramètres de génération</h2>
+
+            <div class="alert alert-warning" th:if="${hasMatches}">
+                Des rencontres existent déjà pour ce tournoi. La génération est refusée
+                afin d'éviter les doublons : supprimez le tournoi et recréez-le si nécessaire.
+            </div>
+            <div class="alert alert-warning" th:if="${registeredCount < 2}">
+                Moins de deux équipes sont inscrites : la génération est impossible.
+            </div>
+
+            <form method="post" th:action="@{/tournaments/{id}/generate(id=${t.id})}" th:object="${generationForm}">
+                <div class="error-summary" th:if="${#fields.hasAnyErrors()}">
+                    <ul>
+                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">erreur</li>
+                    </ul>
+                </div>
+                <div class="form-grid">
+                    <div>
+                        <label for="startDate">Date de la première rencontre</label>
+                        <input type="date" id="startDate" th:field="*{startDate}">
+                        <span class="help-text">Par défaut : date de début du tournoi.</span>
+                    </div>
+                    <div>
+                        <label for="daysBetweenRounds">Jours entre deux tours</label>
+                        <input type="number" id="daysBetweenRounds" th:field="*{daysBetweenRounds}" min="1">
+                    </div>
+                    <div>
+                        <label for="numberOfFields">Nombre de terrains</label>
+                        <input type="number" id="numberOfFields" th:field="*{numberOfFields}" min="1" max="10">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn"
+                            th:disabled="${hasMatches or registeredCount < 2}">Générer les rencontres</button>
+                </div>
+            </form>
+        </div>
+
+        <div>
+            <div class="card">
+                <h2 class="card-title">Règles appliquées</h2>
+                <ul style="margin:0; padding-left:18px; font-size:13.5px; color:var(--muted);">
+                    <li><strong>Championnat simple</strong> : méthode du cercle, une rencontre par paire.</li>
+                    <li><strong>Aller-retour</strong> : les mêmes affiches sont rejouées avec les terrains inversés.</li>
+                    <li><strong>Élimination directe</strong> : taille de tableau = puissance de deux inférieure au nombre d'équipes.
+                        Un tour préliminaire est ajouté si nécessaire et les meilleures têtes de série sont exemptes.</li>
+                    <li>Aucune équipe ne peut jouer deux rencontres simultanément.</li>
+                    <li>Le calendrier ne peut pas être généré deux fois.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h2 class="card-title">État actuel</h2>
+                <table>
+                    <tbody>
+                    <tr><th>Statut</th><td th:text="${t.status.libelle}">—</td></tr>
+                    <tr><th>Équipes inscrites</th><td th:text="${registeredCount} + ' / ' + ${t.maxTeams}">—</td></tr>
+                    <tr><th>Format</th><td th:text="${t.type.libelle}">—</td></tr>
+                    <tr><th>Durée d'un match</th><td th:text="${t.matchDurationMinutes} + ' min'">—</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
